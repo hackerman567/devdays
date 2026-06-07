@@ -2,8 +2,10 @@ import 'dotenv/config';
 import express from 'express';
 import corsMiddleware from './middleware/cors.js';
 import { apiLimiter } from './middleware/rateLimit.js';
+import { sessionsLimiter } from './middleware/rateLimit.js';
 import healthRoute from './routes/health.js';
 import groqRoute from './routes/groq.js';
+import sessionsRoute from './routes/sessions.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -18,6 +20,7 @@ app.use('/api/', apiLimiter);
 // Route Declarations
 app.use('/api/health', healthRoute);
 app.use('/api/groq', groqRoute);
+app.use('/api/sessions', sessionsLimiter, sessionsRoute);
 
 // Basic 404 handler
 app.use((req, res, next) => {

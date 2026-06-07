@@ -7,6 +7,7 @@ export const useLectureStore = create((set) => ({
   isSummarizing: false,
   chatHistory: [], // elements format: { role: 'user'|'assistant', content: string }
   isAiTyping: false,
+  currentImportance: null,
 
   actions: {
     setSummary: (data) => set({
@@ -28,6 +29,7 @@ export const useLectureStore = create((set) => ({
     
     setIsSummarizing: (bool) => set({ isSummarizing: bool }),
     setIsAiTyping: (bool) => set({ isAiTyping: bool }),
-    setChatHistory: (history) => set({ chatHistory: history })
+    setChatHistory: (history) => set({ chatHistory: history }),
+    setCurrentImportance: (data) => set({ currentImportance: data })
   }
 }));

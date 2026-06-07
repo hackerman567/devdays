@@ -280,4 +280,67 @@ router.post('/ask', async (req, res) => {
   }
 });
 
+// 3. POST /api/groq/analyze-chunk
+router.post('/analyze-chunk', async (req, res) => {
+  const { chunk, timestamp, sessionId } = req.body;
+
+  if (!chunk || chunk.trim().length < 10) {
+    return res.json({ type: 'normal', importance: 'low', label: '', reason: '' });
+  }
+
+  const groq = getGroqClient();
+
+  // Demo fallback for chunk analysis
+  if (!groq) {
+    // In mock mode, we just return 'normal' and let the frontend inject the hardcoded demo markers
+    return res.json({ type: 'normal', importance: 'low', label: 'Mock normal', reason: 'Mock fallback' });
+  }
+
+  try {
+    const systemPrompt = `You are analyzing a live lecture transcript chunk for a deaf student accessibility app.
+Classify this chunk and respond ONLY with valid JSON, no markdown:
+{
+  "type": one of ["exam", "concept", "formula", "example", "story", "normal"],
+  "importance": one of ["high", "medium", "low"],
+  "label": "max 6 word summary of this moment",
+  "reason": "one sentence why this is important"
+}
+If the content is just filler or transition words, use type "normal" and importance "low".`;
+
+    const response = await groq.chat.completions.create({
+      model: 'llama3-70b-8192',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: chunk }
+      ],
+      response_format: { type: 'json_object' },
+      stream: false
+    });
+
+    const content = response.choices[0]?.message?.content;
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(content);
+    } catch (_) {
+      parsedData = {};
+    }
+
+    // Validate fields to avoid returning unexpected shapes
+    const VALID_TYPES = ['exam', 'concept', 'formula', 'example', 'story', 'normal'];
+    const VALID_IMPORTANCE = ['high', 'medium', 'low'];
+    const safeResponse = {
+      type: VALID_TYPES.includes(parsedData.type) ? parsedData.type : 'normal',
+      importance: VALID_IMPORTANCE.includes(parsedData.importance) ? parsedData.importance : 'low',
+      label: typeof parsedData.label === 'string' ? parsedData.label.slice(0, 80) : '',
+      reason: typeof parsedData.reason === 'string' ? parsedData.reason.slice(0, 200) : ''
+    };
+
+    res.json(safeResponse);
+  } catch (error) {
+    console.error('Groq chunk analysis failed:', error);
+    res.json({ type: 'normal', importance: 'low', label: '', reason: 'Error fallback' });
+  }
+});
+
 export default router;

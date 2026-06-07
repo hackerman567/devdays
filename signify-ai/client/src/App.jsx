@@ -7,6 +7,7 @@ import Classroom from './pages/Classroom';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Settings from './pages/Settings';
+import JoinSession from './pages/JoinSession';
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
       />
       
       <Routes>
+        <Route path="/join/:sessionId" element={<JoinSession />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Landing />} />
           <Route path="classroom" element={<Classroom />} />

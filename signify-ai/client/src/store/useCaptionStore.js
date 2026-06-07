@@ -9,6 +9,7 @@ export const useCaptionStore = create((set) => ({
   sessionId: '',
   startTime: null,
   wordCount: 0,
+  heatmapMarkers: [],
 
   actions: {
     addFinalLine: (text) => set((state) => {
@@ -32,6 +33,10 @@ export const useCaptionStore = create((set) => ({
       newTranslated[index] = text;
       return { translatedLines: newTranslated };
     }),
+
+    addHeatmapMarker: (marker) => set((state) => ({
+      heatmapMarkers: [...state.heatmapMarkers, marker]
+    })),
     
     startSession: () => set({
       isListening: true,
@@ -40,7 +45,8 @@ export const useCaptionStore = create((set) => ({
       interimText: '',
       finalTranscript: [],
       translatedLines: [],
-      wordCount: 0
+      wordCount: 0,
+      heatmapMarkers: []
     }),
     
     stopSession: () => set({ isListening: false }),
@@ -51,7 +57,8 @@ export const useCaptionStore = create((set) => ({
       translatedLines: [],
       wordCount: 0,
       startTime: null,
-      sessionId: ''
+      sessionId: '',
+      heatmapMarkers: []
     }),
     
     incrementWordCount: (n) => set((state) => ({ wordCount: state.wordCount + n }))

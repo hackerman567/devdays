@@ -9,3 +9,14 @@ export const apiLimiter = rateLimit({
     error: 'Too many requests, please try again later.',
   },
 });
+
+// Relaxed limiter for SSE sessions — caption push fires per sentence
+export const sessionsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: 'Session rate limit exceeded.',
+  },
+});

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useCaptionStore } from '../store/useCaptionStore';
-import { useSettingsStore } from '../store/useSettingsStore';
+import { useLectureStore } from '../store/useLectureStore';
 
 const SAMPLE_LECTURE_TEXT = 
   "Welcome class. Today we are going to study React components and how we manage local state using hooks. " +
@@ -23,7 +23,15 @@ export function useSpeechRecognition() {
   const demoIndexRef = useRef(0);
   const currentSentenceRef = useRef([]);
 
-  // Auto-restart behavior if listening is active
+  // Heatmap tracking refs
+  const lastAnalyzedWordCount = useRef(0);
+  const sessionTimerRef = useRef(null);
+  const demoMarkersInjected = useRef(new Set());
+  const lastFiredSecond = useRef(-1);
+
+  // Keep latest values in refs to avoid stale closures
+  const isListeningRef = useRef(false);
+  const isDemoModeRef = useRef(false);
   const shouldRestartRef = useRef(false);
 
   useEffect(() => {
@@ -77,7 +85,8 @@ export function useSpeechRecognition() {
 
     rec.onend = () => {
       console.log('Speech recognition ended');
-      if (shouldRestartRef.current && isListening && !isDemoMode) {
+      // Use refs to avoid stale closure values
+      if (shouldRestartRef.current && isListeningRef.current && !isDemoModeRef.current) {
         try {
           recognitionRef.current.start();
         } catch (err) {
@@ -94,6 +103,15 @@ export function useSpeechRecognition() {
       }
     };
   }, [actions]);
+
+  // Keep refs in sync with latest state values
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
+
+  useEffect(() => {
+    isDemoModeRef.current = isDemoMode;
+  }, [isDemoMode]);
 
   // Sync listening state with speech recognition or demo mode
   useEffect(() => {
@@ -126,6 +144,88 @@ export function useSpeechRecognition() {
     return () => {
       stopDemoSimulation();
     };
+  }, [isListening, isDemoMode]);
+
+  // Heatmap and Demo Marker Injection logic
+  useEffect(() => {
+    if (!isListening) {
+      if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
+      lastAnalyzedWordCount.current = 0;
+      lastFiredSecond.current = -1;
+      demoMarkersInjected.current = new Set();
+      return;
+    }
+
+    const startTime = Date.now();
+
+    sessionTimerRef.current = setInterval(async () => {
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const state = useCaptionStore.getState();
+      const lectureState = useLectureStore.getState();
+
+      if (isDemoMode) {
+        // Inject demo markers
+        const inject = (timestamp, markerObj) => {
+          if (!demoMarkersInjected.current.has(timestamp) && elapsedSeconds >= timestamp) {
+            demoMarkersInjected.current.add(timestamp);
+            setTimeout(() => {
+              const newMarker = {
+                id: Math.random().toString(),
+                ...markerObj,
+                timestamp: elapsedSeconds,
+                transcriptIndex: state.finalTranscript.length
+              };
+              state.actions.addHeatmapMarker(newMarker);
+              lectureState.actions.setCurrentImportance(newMarker);
+            }, 200); // realistic delay
+          }
+        };
+
+        inject(15, { type: 'concept', importance: 'high', label: 'Photosynthesis definition', reason: 'Core concept introduced' });
+        inject(35, { type: 'exam', importance: 'high', label: 'Will appear in exam', reason: 'Teacher explicitly mentioned exam' });
+        inject(55, { type: 'formula', importance: 'high', label: 'Chlorophyll equation', reason: 'Mathematical formula stated' });
+        inject(75, { type: 'example', importance: 'medium', label: 'Real world analogy given', reason: 'Teacher used solar panel analogy' });
+        inject(95, { type: 'exam', importance: 'high', label: 'Important derivation step', reason: 'Step-by-step formula derivation' });
+        return;
+      }
+
+      // Real API logic: trigger every 20 seconds, deduplicated by lastFiredSecond ref
+      if (elapsedSeconds > 0 && elapsedSeconds % 20 === 0 && lastFiredSecond.current !== elapsedSeconds) {
+        lastFiredSecond.current = elapsedSeconds;
+        const currentWordCount = state.wordCount;
+        if (currentWordCount - lastAnalyzedWordCount.current >= 30) {
+          lastAnalyzedWordCount.current = currentWordCount;
+
+          const transcriptWords = state.finalTranscript.join(' ').split(' ');
+          const chunk = transcriptWords.slice(-200).join(' '); // last 200 words
+
+          try {
+            const res = await fetch('/api/groq/analyze-chunk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chunk, timestamp: elapsedSeconds, sessionId: state.sessionId })
+            });
+            const data = await res.json();
+
+            const newMarker = {
+              id: Math.random().toString(),
+              ...data,
+              timestamp: elapsedSeconds,
+              transcriptIndex: state.finalTranscript.length
+            };
+
+            if (!(data.type === 'normal' && data.importance === 'low')) {
+              state.actions.addHeatmapMarker(newMarker);
+            }
+            lectureState.actions.setCurrentImportance(newMarker);
+          } catch (e) {
+            console.error('Heatmap analysis failed:', e);
+          }
+        }
+      }
+    }, 1000); // run check every second
+
+    return () => clearInterval(sessionTimerRef.current);
   }, [isListening, isDemoMode]);
 
   // Demo simulation function

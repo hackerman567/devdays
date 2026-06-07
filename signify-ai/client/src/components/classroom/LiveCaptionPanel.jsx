@@ -3,6 +3,7 @@ import { useCaptionStore } from '../../store/useCaptionStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import Badge from '../ui/Badge';
 import { Mic, MicOff } from 'lucide-react';
+import ImportanceBadge from './ImportanceBadge';
 
 export default function LiveCaptionPanel() {
   const { finalTranscript, interimText, translatedLines, isListening } = useCaptionStore();
@@ -52,7 +53,8 @@ export default function LiveCaptionPanel() {
   }, [finalTranscript, interimText, translatedLines]);
 
   return (
-    <div className="flex flex-col h-full bg-bg-surface border border-border-subtle rounded-xl overflow-hidden relative">
+    <div className="flex-1 flex flex-col bg-bg-surface border border-border-subtle rounded-xl overflow-hidden relative">
+      <ImportanceBadge />
       {/* Panel Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle bg-bg-surface/50 backdrop-blur-sm z-10">
         <div className="flex items-center gap-3">

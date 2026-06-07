@@ -8,6 +8,8 @@ import { saveLecture } from '../lib/db';
 import { SUPPORTED_LANGUAGES } from '../lib/translate';
 
 import LiveCaptionPanel from '../components/classroom/LiveCaptionPanel';
+import HeatmapTimeline from '../components/classroom/HeatmapTimeline';
+import QRJoinPanel from '../components/classroom/QRJoinPanel';
 import LectureSummarizer from '../components/ai/LectureSummarizer';
 import AskAI from '../components/ai/AskAI';
 import Button from '../components/ui/Button';
@@ -243,6 +245,11 @@ export default function Classroom() {
             </div>
           </div>
 
+          {/* QR Share Panel */}
+          <div className="px-5 pb-2">
+            <QRJoinPanel />
+          </div>
+
           {/* Tab Content Areas */}
           <div className="flex-1 overflow-y-auto p-5">
             {activeRightTab === 'summary' ? (
@@ -254,8 +261,10 @@ export default function Classroom() {
         </div>
       </div>
 
+      <HeatmapTimeline />
+
       {/* Bottom Bar: Controllers & Metrics */}
-      <div className="bg-bg-surface border border-border-subtle rounded-xl p-4 md:px-6 flex flex-wrap gap-4 items-center justify-between shrink-0">
+      <div className="bg-bg-surface border border-border-subtle rounded-xl p-4 md:px-6 flex flex-wrap gap-4 items-center justify-between shrink-0 relative z-50">
         
         {/* Left Side Controls (Start/Stop Recording & Simulation) */}
         <div className="flex flex-wrap items-center gap-3">
