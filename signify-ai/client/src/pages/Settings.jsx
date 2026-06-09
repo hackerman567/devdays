@@ -241,6 +241,41 @@ export default function Settings() {
                   ))}
                 </select>
               </div>
+
+              {/* Automation Toggles */}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-text-primary">Auto-Translate Captions</h4>
+                    <p className="text-[10px] text-text-secondary mt-0.5">Automatically translate real-time captions</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoTranslate}
+                      onChange={actions.toggleAutoTranslate}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-secondary peer-checked:after:bg-accent-coral after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent-coral/20 border border-border-subtle"></div>
+                  </label>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-text-primary">Auto-Summarize Session</h4>
+                    <p className="text-[10px] text-text-secondary mt-0.5">Generate a summary automatically when session ends</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoSummarize}
+                      onChange={actions.toggleAutoSummarize}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-secondary peer-checked:after:bg-accent-coral after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent-coral/20 border border-border-subtle"></div>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 

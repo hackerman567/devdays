@@ -81,63 +81,78 @@ export function useAskAI() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to connect to assistant stream.');
+        throw new Error('Failed to connect to assistant.');
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let assistantText = '';
-      let buffer = '';
+      const contentType = response.headers.get('Content-Type') || '';
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        
-        // Save the last incomplete line back to the buffer
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const cleanLine = line.trim();
-          if (!cleanLine) continue;
-
-          if (cleanLine.startsWith('data: ')) {
-            const jsonStr = cleanLine.slice(6);
-            if (jsonStr === '[DONE]') {
-              break;
+      // If the response is JSON (Vercel serverless), read it all at once
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.error) {
+          toast.error(data.error);
+          useLectureStore.setState((state) => {
+            const updatedHistory = [...state.chatHistory];
+            if (updatedHistory.length > 0) {
+              updatedHistory[updatedHistory.length - 1] = { role: 'assistant', content: `Error: ${data.error}` };
             }
-            try {
-              const parsed = JSON.parse(jsonStr);
-              if (parsed.text) {
-                assistantText += parsed.text;
-                // Live update the last message in the chat history
-                useLectureStore.setState((state) => {
-                  const updatedHistory = [...state.chatHistory];
-                  if (updatedHistory.length > 0) {
-                    updatedHistory[updatedHistory.length - 1] = {
-                      role: 'assistant',
-                      content: assistantText
-                    };
-                  }
-                  return { chatHistory: updatedHistory };
-                });
-              } else if (parsed.error) {
-                toast.error(parsed.error);
-                useLectureStore.setState((state) => {
-                  const updatedHistory = [...state.chatHistory];
-                  if (updatedHistory.length > 0) {
-                    updatedHistory[updatedHistory.length - 1] = {
-                      role: 'assistant',
-                      content: `Error: ${parsed.error}`
-                    };
-                  }
-                  return { chatHistory: updatedHistory };
-                });
+            return { chatHistory: updatedHistory };
+          });
+        } else {
+          useLectureStore.setState((state) => {
+            const updatedHistory = [...state.chatHistory];
+            if (updatedHistory.length > 0) {
+              updatedHistory[updatedHistory.length - 1] = { role: 'assistant', content: data.text || '' };
+            }
+            return { chatHistory: updatedHistory };
+          });
+        }
+      } else {
+        // SSE streaming mode (local Express server)
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let assistantText = '';
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const cleanLine = line.trim();
+            if (!cleanLine) continue;
+
+            if (cleanLine.startsWith('data: ')) {
+              const jsonStr = cleanLine.slice(6);
+              if (jsonStr === '[DONE]') break;
+              try {
+                const parsed = JSON.parse(jsonStr);
+                if (parsed.text) {
+                  assistantText += parsed.text;
+                  useLectureStore.setState((state) => {
+                    const updatedHistory = [...state.chatHistory];
+                    if (updatedHistory.length > 0) {
+                      updatedHistory[updatedHistory.length - 1] = { role: 'assistant', content: assistantText };
+                    }
+                    return { chatHistory: updatedHistory };
+                  });
+                } else if (parsed.error) {
+                  toast.error(parsed.error);
+                  useLectureStore.setState((state) => {
+                    const updatedHistory = [...state.chatHistory];
+                    if (updatedHistory.length > 0) {
+                      updatedHistory[updatedHistory.length - 1] = { role: 'assistant', content: `Error: ${parsed.error}` };
+                    }
+                    return { chatHistory: updatedHistory };
+                  });
+                }
+              } catch (err) {
+                console.error('Failed to parse stream chunk:', err);
               }
-            } catch (err) {
-              console.error('Failed to parse stream chunk:', err);
             }
           }
         }

@@ -18,6 +18,7 @@ export default function JoinSession() {
       eventSourceRef.current.close();
     }
 
+    // Attempt SSE connection
     const es = new EventSource(`/api/sessions/${sessionId}/stream`);
     eventSourceRef.current = es;
 
@@ -34,11 +35,32 @@ export default function JoinSession() {
     };
 
     es.onerror = () => {
-      setStatus('error');
       es.close();
       eventSourceRef.current = null;
-      retryTimerRef.current = setTimeout(connect, 3000);
+      
+      // Fallback to HTTP Polling if SSE fails (e.g. on Vercel Serverless)
+      console.log('SSE failed. Falling back to HTTP polling...');
+      pollTranscript();
     };
+  }, [sessionId]);
+
+  const pollTranscript = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/stream`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.transcript) {
+          setLines(data.transcript);
+          setStatus('live');
+        }
+      } else {
+        setStatus('error');
+      }
+    } catch (err) {
+      setStatus('error');
+    }
+    // Poll every 2 seconds
+    retryTimerRef.current = setTimeout(pollTranscript, 2000);
   }, [sessionId]);
 
   useEffect(() => {
@@ -54,7 +76,7 @@ export default function JoinSession() {
       if (eventSourceRef.current) eventSourceRef.current.close();
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     };
-  }, [connect]);
+  }, [connect, pollTranscript]);
 
   // Auto-scroll to bottom
   useEffect(() => {

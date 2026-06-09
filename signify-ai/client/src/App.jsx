@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Settings from './pages/Settings';
 import JoinSession from './pages/JoinSession';
+import SignAvatar from './pages/SignAvatar';
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Landing />} />
           <Route path="classroom" element={<Classroom />} />
+          <Route path="avatar" element={<SignAvatar />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="history" element={<History />} />
           <Route path="settings" element={<Settings />} />

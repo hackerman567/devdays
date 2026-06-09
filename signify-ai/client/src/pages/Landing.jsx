@@ -12,7 +12,8 @@ import {
   HardDrive,
   Cpu,
   ChevronRight,
-  Github
+  Github,
+  Accessibility
 } from 'lucide-react';
 import AnimatedText from '../components/ui/AnimatedText';
 import Button from '../components/ui/Button';
@@ -183,6 +184,57 @@ export default function Landing() {
           <path d="M0,50 C120,80 240,20 360,50 C480,80 600,20 720,50 C840,80 960,20 1080,50 C1200,80 1320,20 1440,50 L1440,100 L0,100 Z" />
         </svg>
       </div>
+
+      {/* Flagship Avatar Showcase Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 border-t border-border-subtle/20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Visual 3D avatar mockup box */}
+          <div className="lg:col-span-5 relative bg-gradient-to-br from-violet-900/20 to-purple-900/20 border border-violet-500/20 rounded-2xl p-6 overflow-hidden flex flex-col items-center justify-center min-h-[300px] shadow-2xl">
+            {/* Glowing neon background circles */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-violet-500/20 rounded-full blur-2xl pointer-events-none" />
+            
+            {/* Floating particle elements */}
+            <div className="absolute top-6 left-8 w-2 h-2 bg-violet-400 rounded-full animate-bounce" />
+            <div className="absolute bottom-12 right-12 w-3.5 h-3.5 bg-blue-400 rounded-full animate-pulse" />
+
+            {/* Stylized Avatar Mockup Silhouette */}
+            <div className="relative z-10 flex flex-col items-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-violet-500/20 border-2 border-violet-400 flex items-center justify-center shadow-lg shadow-violet-500/20 animate-pulse">
+                <Accessibility className="w-10 h-10 text-violet-400" />
+              </div>
+              <div className="text-center space-y-1">
+                <span className="text-[10px] font-bold text-violet-400 uppercase tracking-widest bg-violet-500/10 px-2 py-0.5 rounded border border-violet-500/25">Live 3D Rendering</span>
+                <p className="text-sm font-bold text-white mt-1">Procedural Animation System</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Text and Description */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+            <span className="px-2.5 py-1 text-[10px] font-bold tracking-widest text-violet-400 bg-violet-400/10 border border-violet-400/20 uppercase rounded-full">
+              Flagship Innovation
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white font-display leading-tight">
+              Not Just Captions. <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-blue-400">Visual Sign Language Communication.</span>
+            </h2>
+            <p className="text-text-secondary text-sm sm:text-base max-w-xl leading-relaxed mx-auto lg:mx-0">
+              Transforming classroom speech into real-time visual communication through AI-powered sign language avatars. 
+              Provides deaf and hard-of-hearing students with rich, human-like animated gestures synced with automated subtitles.
+            </p>
+            <div className="pt-2 flex justify-center lg:justify-start">
+              <Button 
+                onClick={() => navigate('/avatar')}
+                variant="primary"
+                size="md"
+                className="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white font-bold px-6 border-none shadow-lg shadow-violet-600/10"
+              >
+                Launch Live Avatar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Stats counter section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10 border-t border-border-subtle/40 bg-black/10">

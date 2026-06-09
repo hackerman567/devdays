@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useTranslation } from '../hooks/useTranslation';
 import { useCaptionStore } from '../store/useCaptionStore';
@@ -12,6 +12,7 @@ import HeatmapTimeline from '../components/classroom/HeatmapTimeline';
 import QRJoinPanel from '../components/classroom/QRJoinPanel';
 import LectureSummarizer from '../components/ai/LectureSummarizer';
 import AskAI from '../components/ai/AskAI';
+import { useGroqAI } from '../hooks/useGroqAI';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import toast from 'react-hot-toast';
@@ -54,6 +55,21 @@ export default function Classroom() {
   // Classroom Page Local UI states
   const [activeRightTab, setActiveRightTab] = useState('summary'); // summary | ask_tutor
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const { generateSummary } = useGroqAI();
+  const prevIsListening = useRef(isListening);
+
+  // Auto-Summarize effect
+  useEffect(() => {
+    if (prevIsListening.current === true && isListening === false) {
+      if (autoSummarize) {
+        const fullText = [...finalTranscript, interimText].filter(Boolean).join(' ');
+        if (fullText.length >= 50 && !useLectureStore.getState().currentSummary) {
+          generateSummary(fullText);
+        }
+      }
+    }
+    prevIsListening.current = isListening;
+  }, [isListening, autoSummarize, finalTranscript, interimText, generateSummary]);
 
   // Live Timer execution
   useEffect(() => {
@@ -231,8 +247,8 @@ export default function Classroom() {
               </select>
             </div>
 
-            {/* Translation Toggles */}
-            <div className="flex items-center gap-3">
+            {/* Automation Toggles */}
+            <div className="flex items-center gap-4">
               <label className="flex items-center gap-1.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -240,7 +256,17 @@ export default function Classroom() {
                   onChange={settingsActions.toggleAutoTranslate}
                   className="rounded border-border-subtle text-accent-coral focus:ring-0 cursor-pointer w-3.5 h-3.5"
                 />
-                <span className="text-[10px] uppercase font-bold tracking-wider text-text-secondary">Translate</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-text-secondary">Auto-Translate</span>
+              </label>
+              
+              <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={autoSummarize}
+                  onChange={settingsActions.toggleAutoSummarize}
+                  className="rounded border-border-subtle text-accent-coral focus:ring-0 cursor-pointer w-3.5 h-3.5"
+                />
+                <span className="text-[10px] uppercase font-bold tracking-wider text-text-secondary">Auto-Summarize</span>
               </label>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Video, History, Settings, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, Video, History, Settings, HelpCircle, Accessibility } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 
@@ -11,6 +11,7 @@ export default function Sidebar() {
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, tooltip: 'Overview & Stats' },
     { name: 'Classroom', path: '/classroom', icon: Video, tooltip: 'Live Captions & AI Tutor' },
+    { name: 'AI Avatar', path: '/avatar', icon: Accessibility, tooltip: 'Sign Language Avatar' },
     { name: 'History', path: '/history', icon: History, tooltip: 'Saved Lecture Archives' },
     { name: 'Settings', path: '/settings', icon: Settings, tooltip: 'App Configurations' },
   ];
